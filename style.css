@@ -1081,7 +1081,7 @@ button:focus-visible::after,
 
 .mega-menu__view-all {
   margin-top: var(--space-6);
-  width: 86%;
+  width: 86% !important;
   text-align: center;
 }
 
