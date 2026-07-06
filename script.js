@@ -152,16 +152,98 @@
 
   if (accordion) {
     var accordionItems = accordion.querySelectorAll('.accordion__item');
+    var accordionDuration = 420;
+
+    function stopAnimation(item, content) {
+      if (item._accordionTimer) {
+        clearTimeout(item._accordionTimer);
+        item._accordionTimer = null;
+      }
+      content.style.transition = 'none';
+      content.getBoundingClientRect();
+      content.style.transition = '';
+      item.dataset.animating = 'false';
+    }
+
+    function closeItem(item) {
+      var content = item.querySelector('.accordion__content');
+      if (!content) return;
+
+      stopAnimation(item, content);
+
+      var startHeight = content.scrollHeight;
+      item.dataset.animating = 'true';
+      content.style.height = startHeight + 'px';
+      content.style.opacity = '1';
+
+      requestAnimationFrame(function () {
+        content.style.height = '0px';
+        content.style.opacity = '0';
+      });
+
+      item._accordionTimer = setTimeout(function () {
+        item.open = false;
+        content.style.height = '';
+        content.style.opacity = '';
+        item.dataset.animating = 'false';
+      }, accordionDuration);
+    }
+
+    function openItem(item) {
+      var content = item.querySelector('.accordion__content');
+      if (!content) return;
+
+      stopAnimation(item, content);
+
+      item.open = true;
+      item.dataset.animating = 'true';
+
+      var targetHeight = content.scrollHeight;
+      content.style.height = '0px';
+      content.style.opacity = '0';
+      content.getBoundingClientRect();
+
+      requestAnimationFrame(function () {
+        content.style.height = targetHeight + 'px';
+        content.style.opacity = '1';
+      });
+
+      item._accordionTimer = setTimeout(function () {
+        content.style.height = 'auto';
+        content.style.opacity = '';
+        item.dataset.animating = 'false';
+      }, accordionDuration);
+    }
 
     accordionItems.forEach(function (item) {
-      item.addEventListener('toggle', function () {
+      var summary = item.querySelector('.accordion__trigger');
+      var content = item.querySelector('.accordion__content');
+      if (!summary || !content) return;
+
+      if (item.open) {
+        content.style.height = 'auto';
+        content.style.opacity = '1';
+      }
+
+      item.dataset.animating = 'false';
+
+      summary.addEventListener('click', function (event) {
+        event.preventDefault();
+
+        if (item.dataset.animating === 'true') return;
+
         if (item.open) {
-          accordionItems.forEach(function (other) {
-            if (other !== item && other.open) {
-              other.open = false;
-            }
-          });
+          closeItem(item);
+          return;
         }
+
+        accordionItems.forEach(function (other) {
+          if (other !== item && other.open) {
+            closeItem(other);
+          }
+        });
+
+        openItem(item);
       });
     });
   }
